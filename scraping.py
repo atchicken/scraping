@@ -14,7 +14,9 @@ def main():
     """
     
     args = Parse()
+    print("Get Data...")
     dataList = getData(args)
+    print("Create CSV...")
     CreateCSV(args, dataList)
 
 def getData(args):
@@ -30,7 +32,6 @@ def getData(args):
     Note:
         ・風向
           北基準の方位角を示す。ex. 北：０, 東：90, ...
-          欠損値削除
         ・取得データ一覧
           ["日時", "現地気圧", "海面気圧", "降水量", "平均気温", "最高気温", "最低気温",
            "湿度", "平均風速", "最大風速", "最大風向", "日照時間"]
@@ -44,83 +45,82 @@ def getData(args):
     
     dataList = []
     while True:
+        print(date)
         url = "http://www.data.jma.go.jp/obd/stats/etrn/view/daily_s1.php?"\
             "prec_no=44&block_no=47662&year=%d&month=%d&day=01&view="%(date.year, date.month)
         
         html = urllib.request.urlopen(url).read()
-        soup = BeautifulSoup(html, "lxml") # または"html5lib"
+        # args[1] = lxml, html.parser, xml, html5lib
+        soup = BeautifulSoup(html, "lxml")
         
-        trs = soup.find("table", { "class" : "data2_s" })
+        tbl = soup.find("table", { "class" : "data2_s" })
         
         # table の中身を取得
-        for tr in trs.findAll('tr')[2:]:
-
+        for tr in tbl.findAll('tr'):
             dataLineList = []
-            tds = tr.findAll('td')
+            tdList = tr.findAll('td')
             
-            if len(tds) == 0:
+            if len(tdList) == 0:
                 continue
-        
-            if tds[1].string == None:
-                break
 
+            print(type(float(tdList[0].string)))
             # " )"がついていることがあるので削除
             for i_column in range(15):
-                if tds[i_column].string[-1] == ")":
-                    tds[i_column].string = tds[i_column].string[:-2]
+                if tdList[i_column].string[-1] == ")":
+                    tdList[i_column].string = tdList[i_column].string[:-2]
 
                     
-            dataDate = datetime.date(date.year, date.month, int(tds[0].string))
+            dataDate = datetime.date(date.year, date.month, int(tdList[0].string))
 
             # 北基準に方位を数値化
-            if tds[13].string == "北":
+            if tdList[13].string == "北":
                 direction = 0
-            elif tds[13].string == "北北東":
+            elif tdList[13].string == "北北東":
                 direction = 22.5
-            elif tds[13].string == "北東":
+            elif tdList[13].string == "北東":
                 direction = 45
-            elif tds[13].string == "東北東":
+            elif tdList[13].string == "東北東":
                 direction = 67.5
-            elif tds[13].string == "東":
+            elif tdList[13].string == "東":
                 direction = 90
-            elif tds[13].string == "東南東":
+            elif tdList[13].string == "東南東":
                 direction = 112.5
-            elif tds[13].string == "南東":
+            elif tdList[13].string == "南東":
                 direction = 135
-            elif tds[13].string == "南南東":
+            elif tdList[13].string == "南南東":
                 direction = 157.5
-            elif tds[13].string == "南":
+            elif tdList[13].string == "南":
                 direction = 180
-            elif tds[13].string == "南南西":
+            elif tdList[13].string == "南南西":
                 direction = 202.5
-            elif tds[13].string == "南西":
+            elif tdList[13].string == "南西":
                 direction = 225
-            elif tds[13].string == "西南西":
+            elif tdList[13].string == "西南西":
                 direction = 247.5
-            elif tds[13].string == "西":
+            elif tdList[13].string == "西":
                 direction = 270
-            elif tds[13].string == "西北西":
+            elif tdList[13].string == "西北西":
                 direction = 292.5
-            elif tds[13].string == "北西":
+            elif tdList[13].string == "北西":
                 direction = 315
-            elif tds[13].string == "北北西":
+            elif tdList[13].string == "北北西":
                 direction = 337.5
             else:
                 break
 
             # 行リストに各情報を追加
             dataLineList.append(dataDate)
-            dataLineList.append(tds[1].string)
-            dataLineList.append(tds[2].string)
-            dataLineList.append(tds[3].string)
-            dataLineList.append(tds[6].string)
-            dataLineList.append(tds[7].string)
-            dataLineList.append(tds[8].string)
-            dataLineList.append(tds[9].string)
-            dataLineList.append(tds[11].string)
-            dataLineList.append(tds[12].string)
+            dataLineList.append(tdList[1].string)
+            dataLineList.append(tdList[2].string)
+            dataLineList.append(tdList[3].string)
+            dataLineList.append(tdList[6].string)
+            dataLineList.append(tdList[7].string)
+            dataLineList.append(tdList[8].string)
+            dataLineList.append(tdList[9].string)
+            dataLineList.append(tdList[11].string)
+            dataLineList.append(tdList[12].string)
             dataLineList.append(direction)
-            dataLineList.append(tds[16].string)
+            dataLineList.append(tdList[16].string)
         
             dataList.append(dataLineList)
         
