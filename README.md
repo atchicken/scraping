@@ -15,4 +15,4 @@ python scraping.py -sd {Start Date} -ed {End Date} -cp {CSV File Path}
 
 ## Detailed Explanation(Japanese)
 
-https://atchicken.com/scraping/
+・[Blog](https://atchicken.com/scraping/)
